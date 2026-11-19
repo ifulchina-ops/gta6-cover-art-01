@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Coast Cover Studio — GTA-style cover art maker</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">NC</span><span class="brand-name">Neon Coast <em>Cover Studio</em></span></div>
+  <p class="tagline">Your photos + a caption &rarr; a Vice-sunset multi-panel cover. Fully offline — photos never leave your machine.</p>
+</header>
+<main class="app">
+  <section class="controls" aria-label="Cover controls">
+    <h1>Make your cover</h1>
+
+    <fieldset class="group">
+      <legend>1 · Photos (1–4)</legend>
+      <label class="file-btn">Add photos <input id="photoInput" type="file" accept="image/*" multiple></label>
+      <div class="samples" id="samples">
+        <button type="button" data-sample="boulevard.jpg">Sample: Boulevard</button>
+        <button type="button" data-sample="pier.jpg">Sample: Pier</button>
+        <button type="button" id="clearPhotos">Clear all</button>
+      </div>
+      <ul class="photo-list" id="photoList" aria-label="Loaded photos"></ul>
+      <p class="hint">Click a photo, then click a panel on the cover to put it there. Drag a panel to reposition its photo; use the zoom slider to crop tighter.</p>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>2 · Layout</legend>
+      <div class="choices" id="layoutChoices">
+        <button type="button" data-layout="grid4" class="active">4-panel grid</button>
+        <button type="button" data-layout="hero3">Hero + three</button>
+        <button type="button" data-layout="fullbleed">Full-bleed</button>
+        <button type="button" data-layout="grid9">9-panel grid</button>
+        <button type="button" data-layout="tilted">Tilted snapshots</button>
+      </div>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>3 · Grade</legend>
+      <div class="choices" id="gradeChoices">
+        <button type="button" data-grade="sunset" class="active">Vice Sunset</button>
+        <button type="button" data-grade="neon">Neon Night</button>
+        <button type="button" data-grade="dusk">Palm Dusk</button>
+        <button type="button" data-grade="noir">Noir</button>
+        <button type="button" data-grade="teal">Teal Heat</button>
+      </div>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>4 · Caption</legend>
+      <label>Title <input id="titleInput" type="text" maxlength="24" value="NEON COAST"></label>
+      <label>Subtitle <input id="subtitleInput" type="text" maxlength="40" value="sunset stories"></label>
+      <label>Badge <input id="badgeInput" type="text" maxlength="24" value="EST. 2026"></label>
+      <label class="check"><input id="halftoneToggle" type="checkbox" checked> Halftone title block</label>
+      <label class="check"><input id="grainToggle" type="checkbox" checked> Film grain + vignette</label>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Selected panel</legend>
+      <label>Zoom <input id="zoomInput" type="range" min="1" max="3" step="0.05" value="1.2"></label>
+      <div class="panel-actions">
+        <button type="button" id="shuffleBtn">Shuffle photos</button>
+        <button type="button" id="swapBtn">Next photo in panel</button>
+      </div>
+      <p class="hint" id="panelHint">Panel 1 selected — drag on the cover to move its photo.</p>
+    </fieldset>
+
+    <fieldset class="group export-group">
+      <legend>5 · Export PNG</legend>
+      <div class="export-buttons">
+        <button type="button" id="exportSquare">1080 × 1080</button>
+        <button type="button" id="exportPortrait">1080 × 1350</button>
+        <button type="button" id="exportWide">1920 × 1080</button>
+        <button type="button" id="exportAll" class="primary">Export all three</button>
+      </div>
+      <div class="undo-row">
+        <button type="button" id="undoBtn">Undo</button>
+        <button type="button" id="redoBtn">Redo</button>
+        <button type="button" id="resetBtn">Reset cover</button>
+      </div>
+      <p id="status" role="status">Ready — add a photo or try a sample.</p>
+    </fieldset>
+  </section>
+
+  <section class="stage" aria-label="Cover preview">
+    <canvas id="cover" width="1080" height="1080" aria-label="The cover preview"></canvas>
+    <p class="stage-hint">Live preview — drag panels, scroll to zoom the selected panel.</p>
+  </section>
+</main>
+<footer class="foot">Neon Coast Cover Studio · original art, Anton + Pacifico (SIL OFL) · no uploads, no tracking.</footer>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
