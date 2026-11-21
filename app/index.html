@@ -3,94 +3,81 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Neon Coast Cover Studio — GTA-style cover art maker</title>
+<title>Leonida Nights — GTA-style cover art</title>
+<meta name="description" content="Turn four photos into a Leonida Nights cover: three layouts, three colour grades, three post sizes, exported as a PNG in your browser.">
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand"><span class="brand-mark">NC</span><span class="brand-name">Neon Coast <em>Cover Studio</em></span></div>
-  <p class="tagline">Your photos + a caption &rarr; a Vice-sunset multi-panel cover. Fully offline — photos never leave your machine.</p>
-</header>
-<main class="app">
-  <section class="controls" aria-label="Cover controls">
-    <h1>Make your cover</h1>
+<div class="studio" id="studio">
 
-    <fieldset class="group">
-      <legend>1 · Photos (1–4)</legend>
-      <label class="file-btn">Add photos <input id="photoInput" type="file" accept="image/*" multiple></label>
-      <div class="samples" id="samples">
-        <button type="button" data-sample="boulevard.jpg">Sample: Boulevard</button>
-        <button type="button" data-sample="pier.jpg">Sample: Pier</button>
-        <button type="button" id="clearPhotos">Clear all</button>
+  <aside class="rail" aria-label="Cover controls">
+    <header class="brand">
+      <p class="brand-mark">Leonida<span>Nights</span></p>
+      <p class="brand-sub">Cover art studio</p>
+    </header>
+
+    <section class="group" aria-labelledby="photos-h">
+      <h2 id="photos-h">Photos</h2>
+      <p class="hint">Drop your own, or start from one of the four sample vignettes.</p>
+      <div class="slots" id="slots"></div>
+      <label class="drop" id="drop">
+        <input id="files" type="file" accept="image/*" multiple>
+        <span>Add photos</span>
+        <em>PNG, JPEG or WebP · never leaves this page</em>
+      </label>
+    </section>
+
+    <section class="group" aria-labelledby="layout-h">
+      <h2 id="layout-h">Layout</h2>
+      <div class="segmented" id="layouts" role="radiogroup" aria-labelledby="layout-h"></div>
+    </section>
+
+    <section class="group" aria-labelledby="grade-h">
+      <h2 id="grade-h">Colour grade</h2>
+      <div class="swatches" id="grades" role="radiogroup" aria-labelledby="grade-h"></div>
+    </section>
+
+    <section class="group" aria-labelledby="copy-h">
+      <h2 id="copy-h">Cover copy</h2>
+      <label class="field">Title<input id="title" type="text" maxlength="26" spellcheck="false"></label>
+      <label class="field">Subtitle<input id="subtitle" type="text" maxlength="34" spellcheck="false"></label>
+      <label class="field">Kicker<input id="kicker" type="text" maxlength="24" spellcheck="false"></label>
+      <label class="field">Caption<input id="caption" type="text" maxlength="52" spellcheck="false"></label>
+    </section>
+
+    <section class="group" aria-labelledby="panel-h">
+      <h2 id="panel-h">Selected panel</h2>
+      <p class="hint" id="panel-name">Panel 1</p>
+      <label class="field">Crop horizontal<input id="crop-x" type="range" min="-100" max="100" value="0"></label>
+      <label class="field">Crop vertical<input id="crop-y" type="range" min="-100" max="100" value="0"></label>
+      <label class="field">Zoom<input id="zoom" type="range" min="100" max="260" value="100"></label>
+      <div class="row">
+        <button id="deal" class="ghost" type="button">Auto-deal photos</button>
+        <button id="reset-panel" class="ghost" type="button">Reset panel</button>
       </div>
-      <ul class="photo-list" id="photoList" aria-label="Loaded photos"></ul>
-      <p class="hint">Click a photo, then click a panel on the cover to put it there. Drag a panel to reposition its photo; use the zoom slider to crop tighter.</p>
-    </fieldset>
+      <p class="hint" id="deal-state">Auto-deal is on: photos fill the panels in turn.</p>
+    </section>
 
-    <fieldset class="group">
-      <legend>2 · Layout</legend>
-      <div class="choices" id="layoutChoices">
-        <button type="button" data-layout="grid4" class="active">4-panel grid</button>
-        <button type="button" data-layout="hero3">Hero + three</button>
-        <button type="button" data-layout="fullbleed">Full-bleed</button>
-        <button type="button" data-layout="grid9">9-panel grid</button>
-        <button type="button" data-layout="tilted">Tilted snapshots</button>
-      </div>
-    </fieldset>
+    <section class="group" aria-labelledby="export-h">
+      <h2 id="export-h">Export</h2>
+      <div class="sizes" id="sizes"></div>
+      <button id="export" class="primary" type="button">Export PNG</button>
+      <p class="hint status" id="status" role="status">Ready</p>
+    </section>
+  </aside>
 
-    <fieldset class="group">
-      <legend>3 · Grade</legend>
-      <div class="choices" id="gradeChoices">
-        <button type="button" data-grade="sunset" class="active">Vice Sunset</button>
-        <button type="button" data-grade="neon">Neon Night</button>
-        <button type="button" data-grade="dusk">Palm Dusk</button>
-        <button type="button" data-grade="noir">Noir</button>
-        <button type="button" data-grade="teal">Teal Heat</button>
-      </div>
-    </fieldset>
+  <main class="stage" aria-label="Preview">
+    <div class="stage-bar">
+      <span class="live"><i></i>Live preview</span>
+      <span id="stage-meta">Vice Gold · 2 × 2 grid</span>
+    </div>
+    <div class="board" id="board">
+      <canvas id="cover" width="1080" height="1080" aria-label="The cover being made"></canvas>
+    </div>
+    <p class="stage-foot">Drag a panel to reposition its crop · scroll or use Zoom to tighten it · the skyline is seeded per grade, so every export repeats exactly.</p>
+  </main>
 
-    <fieldset class="group">
-      <legend>4 · Caption</legend>
-      <label>Title <input id="titleInput" type="text" maxlength="24" value="NEON COAST"></label>
-      <label>Subtitle <input id="subtitleInput" type="text" maxlength="40" value="sunset stories"></label>
-      <label>Badge <input id="badgeInput" type="text" maxlength="24" value="EST. 2026"></label>
-      <label class="check"><input id="halftoneToggle" type="checkbox" checked> Halftone title block</label>
-      <label class="check"><input id="grainToggle" type="checkbox" checked> Film grain + vignette</label>
-    </fieldset>
-
-    <fieldset class="group">
-      <legend>Selected panel</legend>
-      <label>Zoom <input id="zoomInput" type="range" min="1" max="3" step="0.05" value="1.2"></label>
-      <div class="panel-actions">
-        <button type="button" id="shuffleBtn">Shuffle photos</button>
-        <button type="button" id="swapBtn">Next photo in panel</button>
-      </div>
-      <p class="hint" id="panelHint">Panel 1 selected — drag on the cover to move its photo.</p>
-    </fieldset>
-
-    <fieldset class="group export-group">
-      <legend>5 · Export PNG</legend>
-      <div class="export-buttons">
-        <button type="button" id="exportSquare">1080 × 1080</button>
-        <button type="button" id="exportPortrait">1080 × 1350</button>
-        <button type="button" id="exportWide">1920 × 1080</button>
-        <button type="button" id="exportAll" class="primary">Export all three</button>
-      </div>
-      <div class="undo-row">
-        <button type="button" id="undoBtn">Undo</button>
-        <button type="button" id="redoBtn">Redo</button>
-        <button type="button" id="resetBtn">Reset cover</button>
-      </div>
-      <p id="status" role="status">Ready — add a photo or try a sample.</p>
-    </fieldset>
-  </section>
-
-  <section class="stage" aria-label="Cover preview">
-    <canvas id="cover" width="1080" height="1080" aria-label="The cover preview"></canvas>
-    <p class="stage-hint">Live preview — drag panels, scroll to zoom the selected panel.</p>
-  </section>
-</main>
-<footer class="foot">Neon Coast Cover Studio · original art, Anton + Pacifico (SIL OFL) · no uploads, no tracking.</footer>
+</div>
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>
