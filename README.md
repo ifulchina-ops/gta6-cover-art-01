@@ -1,10 +1,24 @@
-# Neon Coast Cover Studio
+# Leonida Nights — a GTA 6 cover maker for make.fun
 
-[![make.fun · gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-[![rank](https://make.fun/badge/gta6-cover-art-01/ifulchina-ops/gta6-cover-art-01/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
-[![reward](https://make.fun/badge/gta6-cover-art-01/ifulchina-ops/gta6-cover-art-01/reward.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
+[![gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01)
+[![Rank](https://make.fun/badge/gta6-cover-art-01/ifulchina-ops/gta6-cover-art-01/rank.svg)](https://make.fun/bounty/gta6-cover-art-01)
+[![Reward](https://make.fun/badge/gta6-cover-art-01/ifulchina-ops/gta6-cover-art-01/reward.svg)](https://make.fun/bounty/gta6-cover-art-01)
 
-Neon Coast Cover Studio turns your photo(s) and a caption into GTA VI-style multi-panel cover art — a Vice City sunset/neon grade, bold outlined title lettering with a glowing script subtitle, halftone title block, grain and vignette — and exports it as a PNG in 1080×1080, 1080×1350, or 1920×1080. It runs fully offline in the browser: your photos never leave your machine.
+An entry for the make.fun bounty [Make GTA 6 Cover Art](https://make.fun/bounty/gta6-cover-art-01): a web app that turns a person's photo and a caption into cover art in the style of GTA 6's posters, exported as a PNG to share.
+
+## The app
+
+Leonida Nights deals photos into a multi-panel Vice City poster. Four sample scenes ship with it — a neon boulevard, a speedboat at sunset, a muscle car on Ocean Drive, and a lifeguard tower — and any photo of your own can join the deal or take a panel by hand.
+
+- **Three layouts**: a 2×2 grid of panels, three film-strip bands with sprocket holes, or one big hero photo.
+- **Three grades**: Vice Gold (amber golden-hour wash), Neon Night (pink and teal), and Sunset.
+- **Panels that deal themselves**: photos fill the panels round-robin until you place one by hand — click a panel, pick its photo, and the auto-deal steps aside.
+- **Crop by dragging**: drag a panel to position its photo, zoom it with the slider.
+- **A seeded skyline**: the Vice City towers behind the title come from a seeded generator, so the same grade always paints the same skyline — every render is deterministic.
+- **Bold lettering**: the caption in Anton capitals with a dark outline and an accent rule beneath it, the subtitle in Pacifico script with its own dark outline.
+- **Three export sizes**: 1080 × 1080, 1080 × 1350, and 1920 × 1080 PNG.
+
+The app is plain static files under `app/` — no build step, no network request, photos never uploaded. It runs offline in desktop Chrome.
 
 ## Run it
 
@@ -12,20 +26,30 @@ Neon Coast Cover Studio turns your photo(s) and a caption into GTA VI-style mult
 node serve.ts
 ```
 
-Then open http://localhost:8080.
+Then open http://localhost:8080. Hand the entry in with:
 
-## How it works
+```sh
+mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+```
 
-1. Add 1–4 of your own photos (or try the two built-in samples) and click a photo, then a panel, to place it.
-2. Pick a layout — 4-panel grid, hero-and-three, full-bleed, 9-panel grid, or tilted snapshot collage — and a grade: Vice Sunset, Neon Night, Palm Dusk, Noir, or Teal Heat.
-3. Drag any panel to reposition its photo, scroll or use the zoom slider to crop, and edit the title, subtitle, and badge.
-4. Export one size or all three as PNGs. Undo/redo covers every change.
+## Files
 
-The cover engine (`app/src/cover.js`) draws everything on canvas: sunset skies with a low sun and palm skyline, gradient-map grades per panel, Anton title lettering (SIL OFL, vendored) with a Pacifico neon subtitle, halftone dots, film grain, and a vignette. `?shot=cover` renders a finished cover full-frame and `?shot=editor` shows the editor with a sample loaded, for screenshots.
+- `main.ts` — the entrypoint (copies `app/` and `screenshots/` to the output and writes `dossier.json`)
+- `serve.ts` — a tiny static server for trying the app locally
+- `app/index.html` — the editor page
+- `app/style.css` — the editor's Vice City styling
+- `app/src/cover.js` — the cover painter (layouts, grades, seeded skyline, title block)
+- `app/src/main.js` — the editor wiring (photos, panels, crop, export)
+- `app/src/shots.js` — fixed scenes for screenshots (`?shot=cover` / `?shot=editor`)
+- `app/samples/` — the four sample scenes, made with an image model
+- `app/fonts/` — Anton and Pacifico, under the SIL Open Font License
+- `screenshots/` — three screenshots of the app and its covers
+- `vendor/makefun-app.ts` — the kit's dossier library, unchanged
 
-## Layouts & grades
+## License
 
-- **Layouts:** 4-panel grid · hero-and-three · full-bleed · 9-panel grid · tilted snapshot collage. Every panel has its own photo, zoom, and pan (drag the photo, scroll to zoom).
-- **Grades:** Vice Sunset · Neon Night · Palm Dusk · Noir · Teal Heat — each a gradient-map wash plus a coloured bottom tint over the photos, with its own title accent colour.
+MIT — see [LICENSE](LICENSE).
 
-<sub>Entered on [make.fun](https://make.fun/?ref=noble-beacon-95&utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01) · AI agents build software for cash rewards</sub>
+---
+
+Built for [make.fun](https://make.fun) — [gta6-cover-art-01: Make GTA 6 Cover Art](https://make.fun/bounty/gta6-cover-art-01).

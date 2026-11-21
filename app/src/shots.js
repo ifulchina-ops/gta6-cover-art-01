@@ -1,32 +1,38 @@
-// Fixed scenes for screenshots: ?shot=editor shows the editor with a sample photo
-// loaded; ?shot=cover shows a finished cover alone, full frame.
-// Query knobs: photo (sample name, or comma list), caption, subtitle, layout, grade.
-// window.__shotReady is set once the scene has painted, so a screenshot can wait on it.
-export async function runShot(shot, query, api) {
-  if (shot === 'cover') document.body.classList.add('shot-cover');
-  const names = (query.get('photos') ?? query.get('photo') ?? (shot === 'cover' ? 'pier' : 'boulevard'))
-    .split(',').map((s) => s.trim()).filter(Boolean);
-  const caption = query.get('caption') ?? (shot === 'cover' ? 'PIER PRESSURE' : 'BOULEVARD QUEEN');
-  const subtitle = query.get('subtitle') ?? 'sunset stories';
-  const layout = query.get('layout') ?? (shot === 'cover' ? 'grid4' : 'grid4');
-  const grade = query.get('grade') ?? 'sunset';
-  const badge = query.get('badge') ?? 'EST. 2026';
+// Fixed scenes for screenshots. `?shot=cover` shows the cover alone, full-bleed;
+// `?shot=editor` shows the editor with a sample loaded. The query picks the rest:
+// `photo` names a sample (neon, speedboat, muscle, lifeguard), `caption` and
+// `subtitle` the words, `layout` one of grid, strips or hero, `grade` one of
+// gold, neon or sunset, `size` one of square, portrait or wide.
+// window.__shotReady is set once the cover has been painted with its fonts.
 
-  // Load every named sample photo first, then lay out the panels over them.
-  for (const name of names) {
-    const file = name.endsWith('.jpg') ? name : `${name}.jpg`;
-    try {
-      const img = await api.loadImage(`samples/${file}`);
-      await api.addPhoto(img, file.replace('.jpg', ''));
-    } catch {
-      // A missing sample must not break the scene; the cover still renders.
-    }
+/**
+ * Sets up a screenshot scene: applies the query to the editor state, waits for
+ * the webfonts (Anton + Pacifico) so the lettering paints correctly, redraws,
+ * then flags readiness. `apply` is the editor's setup callback.
+ */
+export async function runShot(shot, query, apply) {
+  const scene = {
+    photo: query.get('photo') ?? 'neon',
+    caption: query.get('caption') ?? 'Leonida Nights',
+    subtitle: query.get('subtitle') ?? 'welcome back to Vice City',
+    layout: query.get('layout') ?? 'grid',
+    grade: query.get('grade') ?? 'gold',
+    size: query.get('size') ?? 'square',
+  };
+  if (shot === 'cover') document.body.classList.add('shot-cover');
+  await apply(scene);
+  try {
+    await Promise.all([
+      document.fonts.load('80px Anton'),
+      document.fonts.load('40px Pacifico'),
+      document.fonts.ready,
+    ]);
+  } catch {
+    // Fonts already local; a load failure still leaves the fallback faces.
   }
-  api.setState({ layout, grade, badge });
-  api.setCaption(caption, subtitle);
-  api.redraw();
-  // Wait for the vendored fonts, then repaint once so lettering is final.
-  try { await document.fonts.ready; } catch { /* fonts are optional */ }
-  api.redraw();
-  requestAnimationFrame(() => requestAnimationFrame(() => { window.__shotReady = true; }));
+  await apply(scene);
+  await new Promise((done) => {
+    requestAnimationFrame(() => requestAnimationFrame(done));
+  });
+  window.__shotReady = true;
 }
