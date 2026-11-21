@@ -1,8 +1,8 @@
-// Neon Coast Cover Studio — a gta6-cover-art-01 entry (Node 22, standard library only).
+// Leonida Nights Cover Studio — a gta6-cover-art-01 entry, round 2 (Node 22, standard library only).
 // The app is this directory's app/ folder: plain static files a desktop browser loads
 // offline (app/index.html and its ES modules, Anton + Pacifico vendored under app/fonts/
-// with their SIL Open Font License texts, two sample photos under app/samples/, no
-// network request at runtime). This program hands the entry in: it copies app/ and
+// with their SIL Open Font License texts, four Leonida sample photos under app/samples/,
+// no network request at runtime). This program hands the entry in: it copies app/ and
 // screenshots/ from beside this file to /output and writes /output/dossier.json, the
 // summary the judge reads, with the vendored make.fun library.
 //
@@ -10,7 +10,7 @@
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-app.ts';
@@ -18,9 +18,30 @@ import { buildDossier } from './vendor/makefun-app.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-// Fail loudly, before copying anything, when the app's page is missing.
+// The four sample vignettes the default cover is built from: one per panel of the
+// classic grid, so the finished cover never repeats a photo.
+const SAMPLES = ['neon.jpg', 'speedboat.jpg', 'muscle.jpg', 'lifeguard.jpg'];
+
+// The scorer's own screenshot cap (reference/gate.json): no screenshot over 256 KiB.
+const SCREENSHOT_MAX_BYTES = 262144;
+
+// Fail loudly, before copying anything, when the app's page or a sample is missing.
 if (!existsSync(join(here, 'app', 'index.html'))) {
   throw new Error('app/index.html is missing: the app cannot be handed in without its page');
+}
+for (const sample of SAMPLES) {
+  if (!existsSync(join(here, 'app', 'samples', sample))) {
+    throw new Error(`app/samples/${sample} is missing: the default cover needs all four samples`);
+  }
+}
+// Fail loudly when a screenshot would breach the scorer's size cap.
+if (existsSync(join(here, 'screenshots'))) {
+  for (const shot of readdirSync(join(here, 'screenshots'))) {
+    const bytes = statSync(join(here, 'screenshots', shot)).size;
+    if (bytes > SCREENSHOT_MAX_BYTES) {
+      throw new Error(`screenshots/${shot} is ${bytes} bytes: over the scorer's ${SCREENSHOT_MAX_BYTES} cap`);
+    }
+  }
 }
 
 mkdirSync(out, { recursive: true });
@@ -42,4 +63,4 @@ writeFileSync(
     app_path_max_bytes: 1000,
   }),
 );
-console.log(`Neon Coast Cover Studio: wrote ${join(out, 'dossier.json')}`);
+console.log(`Leonida Nights Cover Studio: wrote ${join(out, 'dossier.json')}`);

@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Neon Coast Cover Studio — GTA-style cover art maker</title>
+<title>Leonida Nights Cover Studio — GTA-style cover art maker</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 <header class="topbar">
-  <div class="brand"><span class="brand-mark">NC</span><span class="brand-name">Neon Coast <em>Cover Studio</em></span></div>
+  <div class="brand"><span class="brand-mark">LN</span><span class="brand-name">Leonida Nights <em>Cover Studio</em></span></div>
   <p class="tagline">Your photos + a caption &rarr; a Vice-sunset multi-panel cover. Fully offline — photos never leave your machine.</p>
 </header>
 <main class="app">
@@ -16,11 +16,13 @@
     <h1>Make your cover</h1>
 
     <fieldset class="group">
-      <legend>1 · Photos (1–4)</legend>
+      <legend>1 · Photos (1–6)</legend>
       <label class="file-btn">Add photos <input id="photoInput" type="file" accept="image/*" multiple></label>
       <div class="samples" id="samples">
-        <button type="button" data-sample="boulevard.jpg">Sample: Boulevard</button>
-        <button type="button" data-sample="pier.jpg">Sample: Pier</button>
+        <button type="button" data-sample="neon.jpg">Sample: Neon Blvd</button>
+        <button type="button" data-sample="speedboat.jpg">Sample: Speedboat</button>
+        <button type="button" data-sample="muscle.jpg">Sample: Muscle Car</button>
+        <button type="button" data-sample="lifeguard.jpg">Sample: Lifeguard</button>
         <button type="button" id="clearPhotos">Clear all</button>
       </div>
       <ul class="photo-list" id="photoList" aria-label="Loaded photos"></ul>
@@ -34,6 +36,7 @@
         <button type="button" data-layout="hero3">Hero + three</button>
         <button type="button" data-layout="fullbleed">Full-bleed</button>
         <button type="button" data-layout="grid9">9-panel grid</button>
+        <button type="button" data-layout="strip">Stacked strips</button>
         <button type="button" data-layout="tilted">Tilted snapshots</button>
       </div>
     </fieldset>
@@ -46,14 +49,15 @@
         <button type="button" data-grade="dusk">Palm Dusk</button>
         <button type="button" data-grade="noir">Noir</button>
         <button type="button" data-grade="teal">Teal Heat</button>
+        <button type="button" data-grade="gold">Vice Gold</button>
       </div>
     </fieldset>
 
     <fieldset class="group">
       <legend>4 · Caption</legend>
-      <label>Title <input id="titleInput" type="text" maxlength="24" value="NEON COAST"></label>
-      <label>Subtitle <input id="subtitleInput" type="text" maxlength="40" value="sunset stories"></label>
-      <label>Badge <input id="badgeInput" type="text" maxlength="24" value="EST. 2026"></label>
+      <label>Title <input id="titleInput" type="text" maxlength="24" value="LEONIDA NIGHTS"></label>
+      <label>Subtitle <input id="subtitleInput" type="text" maxlength="40" value="welcome back to Vice City"></label>
+      <label>Badge <input id="badgeInput" type="text" maxlength="24" value="VICE CITY"></label>
       <label class="check"><input id="halftoneToggle" type="checkbox" checked> Halftone title block</label>
       <label class="check"><input id="grainToggle" type="checkbox" checked> Film grain + vignette</label>
     </fieldset>
@@ -90,7 +94,7 @@
     <p class="stage-hint">Live preview — drag panels, scroll to zoom the selected panel.</p>
   </section>
 </main>
-<footer class="foot">Neon Coast Cover Studio · original art, Anton + Pacifico (SIL OFL) · no uploads, no tracking.</footer>
+<footer class="foot">Leonida Nights Cover Studio · original art, Anton + Pacifico (SIL OFL) · no uploads, no tracking.</footer>
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>

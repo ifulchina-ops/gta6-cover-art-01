@@ -55,7 +55,9 @@ input[type=range] { width: 100%; accent-color: #ff2e88; }
   box-shadow: 0 0 16px rgba(255, 46, 136, 0.5);
 }
 .file-btn input { display: none; }
-.samples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.samples { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.samples button { font-size: 13px; padding: 8px 10px; }
+.samples #clearPhotos { grid-column: 1 / -1; }
 button {
   font: inherit; font-weight: 700; padding: 9px 12px; border: 1px solid rgba(255,255,255,0.35);
   border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; cursor: pointer;

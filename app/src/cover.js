@@ -1,10 +1,12 @@
-// Neon Coast Cover Studio — the cover engine.
+// Leonida Nights Cover Studio — the cover engine.
 // Draws GTA-style multi-panel cover art onto a 2D canvas: any photo(s) in poster
 // panels, a Vice-sunset / neon gradient-map grade, bold Anton title lettering with a
 // neon Pacifico subtitle, a halftone title block, film grain and a vignette.
 // All art is drawn in code; no Rockstar logo, artwork or font is used anywhere.
+// Renders are deterministic: the skyline uses a seeded generator, so the same state
+// always paints the same cover.
 
-/** The five colour grades: sky stops, photo wash, bottom tint and title accent. */
+/** The six colour grades: sky stops, photo wash, bottom tint and title accent. */
 export const GRADES = {
   sunset: {
     label: 'Vice Sunset',
@@ -36,10 +38,34 @@ export const GRADES = {
     wash: 'rgba(18, 165, 160, 0.28)', tint: 'rgba(4, 38, 59, 0.5)',
     accent: '#ffe66d', glow: '#12e5d0', filter: 'saturate(1.3) contrast(1.08)',
   },
+  gold: {
+    label: 'Vice Gold',
+    sky: ['#1a0b2e', '#5c1a3a', '#c25e2e', '#ffd166'],
+    wash: 'rgba(255, 190, 80, 0.26)', tint: 'rgba(90, 25, 10, 0.5)',
+    accent: '#fff3b0', glow: '#ff9a3d', filter: 'saturate(1.2) contrast(1.07) brightness(1.02)',
+  },
 };
 
 /** How many panels each layout has. */
-export const LAYOUT_PANELS = { grid4: 4, hero3: 4, fullbleed: 1, grid9: 9, tilted: 4 };
+export const LAYOUT_PANELS = { grid4: 4, hero3: 4, fullbleed: 1, grid9: 9, tilted: 4, strip: 3 };
+
+/** A tiny seeded generator (mulberry32) so the skyline is identical every render. */
+function seededRandom(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** A stable numeric seed from a string (the grade key), for the skyline. */
+function seedFromString(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
 
 /** Panel rectangles (fractions of the canvas) for a layout, with rotation for tilted. */
 export function layoutPanels(layout, w, h) {
@@ -65,6 +91,11 @@ export function layoutPanels(layout, w, h) {
       const out = [];
       for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) out.push(box(c * (cw + g / pw), r * (ch + g / ph), cw, ch));
       return out;
+    }
+    case 'strip': {
+      // Three full-width strips stacked: a film-strip cover, one scene per band.
+      const rh = (1 - 2 * (g / ph)) / 3;
+      return [box(0, 0, 1, rh), box(0, rh + g / ph, 1, rh), box(0, 2 * (rh + g / ph), 1, rh)];
     }
     case 'tilted':
     default: {
@@ -154,8 +185,9 @@ export function drawPanelPhoto(ctx, photo, rect, panel, grade) {
   ctx.restore();
 }
 
-/** A sunset sky with a low sun and a palm-skyline silhouette along the bottom. */
-function drawSkyline(ctx, w, h, grade) {
+/** A sunset sky with a low sun and a palm-skyline silhouette along the bottom.
+ *  The skyline is seeded by the grade, so the same grade always draws the same city. */
+function drawSkyline(ctx, w, h, grade, gradeKey) {
   const sky = ctx.createLinearGradient(0, 0, 0, h);
   grade.sky.forEach((c, i) => sky.addColorStop(i / (grade.sky.length - 1), c));
   ctx.fillStyle = sky;
@@ -169,13 +201,14 @@ function drawSkyline(ctx, w, h, grade) {
   sun.addColorStop(1, 'rgba(255, 120, 80, 0)');
   ctx.fillStyle = sun;
   ctx.beginPath(); ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2); ctx.fill();
-  // Skyline blocks + palm silhouettes.
+  // Skyline blocks + palm silhouettes (seeded: identical on every render).
+  const rand = seededRandom(seedFromString(gradeKey));
   ctx.fillStyle = 'rgba(16, 6, 28, 0.85)';
   const base = h * 0.86;
   let bx = 0;
   while (bx < w) {
-    const bw = w * (0.05 + Math.random() * 0.06);
-    const bh = h * (0.05 + Math.random() * 0.12);
+    const bw = w * (0.05 + rand() * 0.06);
+    const bh = h * (0.05 + rand() * 0.12);
     ctx.fillRect(bx, base - bh, bw, bh + h);
     bx += bw + w * 0.012;
   }
@@ -246,7 +279,7 @@ function drawTitleBlock(ctx, band, state, w, h, grade) {
     ctx.textBaseline = 'alphabetic';
   }
   // Title: Anton, outlined, sunset-gradient fill, sized to fit.
-  const text = (title || 'NEON COAST').trim().toUpperCase();
+  const text = (title || 'LEONIDA NIGHTS').trim().toUpperCase();
   let size = band.h * 0.52;
   ctx.textAlign = 'center';
   const setFont = (s) => { ctx.font = `400 ${s}px Anton, 'Arial Narrow', sans-serif`; };
@@ -265,7 +298,12 @@ function drawTitleBlock(ctx, band, state, w, h, grade) {
   ctx.strokeText(text, w / 2, ty);
   ctx.fillStyle = grad;
   ctx.fillText(text, w / 2, ty);
-  // Subtitle: Pacifico neon script under the title.
+  // Thin accent rule under the title, to anchor the block.
+  const ruleW = Math.min(ctx.measureText(text).width * 0.9, w * 0.6);
+  ctx.fillStyle = grade.accent;
+  ctx.fillRect(w / 2 - ruleW / 2, band.y + band.h * 0.68, ruleW, Math.max(2, h * 0.004));
+  // Subtitle: Pacifico neon script under the title, dark-outlined so it stays
+  // legible over bright panels and at small sizes.
   if (subtitle && subtitle.trim()) {
     let subSize = band.h * 0.2;
     ctx.font = `400 ${subSize}px Pacifico, cursive`;
@@ -273,10 +311,14 @@ function drawTitleBlock(ctx, band, state, w, h, grade) {
       subSize -= 2;
       ctx.font = `400 ${subSize}px Pacifico, cursive`;
     }
+    const subY = band.y + band.h * 0.9;
     ctx.shadowColor = grade.glow;
     ctx.shadowBlur = subSize * 0.55;
+    ctx.lineWidth = Math.max(2, subSize * 0.12);
+    ctx.strokeStyle = 'rgba(12, 4, 22, 0.85)';
+    ctx.strokeText(subtitle, w / 2, subY);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(subtitle, w / 2, band.y + band.h * 0.9);
+    ctx.fillText(subtitle, w / 2, subY);
     ctx.shadowBlur = 0;
   }
   ctx.restore();
@@ -290,10 +332,11 @@ function drawTitleBlock(ctx, band, state, w, h, grade) {
 export function drawCoverArt(canvas, state, photos) {
   const ctx = canvas.getContext('2d');
   const w = canvas.width, h = canvas.height;
-  const grade = GRADES[state.grade] || GRADES.sunset;
+  const gradeKey = state.grade && GRADES[state.grade] ? state.grade : 'sunset';
+  const grade = GRADES[gradeKey];
   const layout = state.layout || 'grid4';
   ctx.clearRect(0, 0, w, h);
-  drawSkyline(ctx, w, h, grade);
+  drawSkyline(ctx, w, h, grade, gradeKey);
   const rects = layoutPanels(layout, w, h);
   rects.forEach((rect, i) => {
     const panel = state.panels?.[i] ?? { photo: null, zoom: 1.15, ox: 0, oy: 0 };

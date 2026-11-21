@@ -2,15 +2,20 @@
 // loaded; ?shot=cover shows a finished cover alone, full frame.
 // Query knobs: photo (sample name, or comma list), caption, subtitle, layout, grade.
 // window.__shotReady is set once the scene has painted, so a screenshot can wait on it.
+// The default cover is the classic GTA grid: four DIFFERENT Leonida vignettes,
+// one per panel — neon boulevard, speedboat, muscle car, lifeguard tower.
 export async function runShot(shot, query, api) {
   if (shot === 'cover') document.body.classList.add('shot-cover');
-  const names = (query.get('photos') ?? query.get('photo') ?? (shot === 'cover' ? 'pier' : 'boulevard'))
+  const defaultPhotos = shot === 'cover'
+    ? 'neon,speedboat,muscle,lifeguard'
+    : 'muscle';
+  const names = (query.get('photos') ?? query.get('photo') ?? defaultPhotos)
     .split(',').map((s) => s.trim()).filter(Boolean);
-  const caption = query.get('caption') ?? (shot === 'cover' ? 'PIER PRESSURE' : 'BOULEVARD QUEEN');
-  const subtitle = query.get('subtitle') ?? 'sunset stories';
-  const layout = query.get('layout') ?? (shot === 'cover' ? 'grid4' : 'grid4');
+  const caption = query.get('caption') ?? 'LEONIDA NIGHTS';
+  const subtitle = query.get('subtitle') ?? 'welcome back to Vice City';
+  const layout = query.get('layout') ?? 'grid4';
   const grade = query.get('grade') ?? 'sunset';
-  const badge = query.get('badge') ?? 'EST. 2026';
+  const badge = query.get('badge') ?? 'VICE CITY';
 
   // Load every named sample photo first, then lay out the panels over them.
   for (const name of names) {

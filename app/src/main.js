@@ -1,4 +1,4 @@
-// Neon Coast Cover Studio — wires the editor: photo uploads, layout + grade picks,
+// Leonida Nights Cover Studio — wires the editor: photo uploads, layout + grade picks,
 // caption editing, per-panel drag/zoom, undo/redo and PNG export in three post sizes.
 // A `?shot=` query sets up a fixed scene for a screenshot instead (./shots.js).
 import { drawCoverArt, renderCover, layoutPanels, LAYOUT_PANELS, GRADES } from './cover.js';
@@ -18,6 +18,10 @@ const photos = [];
 let photoSeq = 0;
 let selectedPhoto = 0;
 let selectedPanel = 0;
+/** True once the user places a photo by hand (click, swap, shuffle) — after that,
+ *  adding a photo must NOT re-deal the panels. Until then, panels auto-deal
+ *  round-robin so every newly added photo actually appears. */
+let panelsTouched = false;
 
 /** The cover state (everything undo/redo snapshots). Panels hold a photo slot index. */
 let state = freshState('grid4');
@@ -26,7 +30,7 @@ function freshState(layout) {
   const count = LAYOUT_PANELS[layout] ?? 4;
   return {
     layout, grade: 'sunset',
-    title: 'NEON COAST', subtitle: 'sunset stories', badge: 'EST. 2026',
+    title: 'LEONIDA NIGHTS', subtitle: 'welcome back to Vice City', badge: 'VICE CITY',
     halftone: true, grain: true,
     panels: Array.from({ length: count }, (_, i) => ({ photo: null, zoom: 1.15, ox: 0, oy: 0 })),
   };
@@ -101,16 +105,15 @@ export function loadImage(url) {
 }
 
 async function addPhoto(img, name) {
-  if (photos.length >= 6) { setStatus('That is the limit — 6 photos at most (4 uploads + 2 samples).'); return -1; }
+  if (photos.length >= 8) { setStatus('That is the limit — 8 photos at most (4 uploads + 4 samples).'); return -1; }
   const entry = { id: ++photoSeq, name, img, url: img.src };
   photos.push(entry);
   selectedPhoto = photos.length - 1;
-  // Fill empty panels with the new photo first, then re-deal round-robin.
-  // If every panel still shows the same single photo (the fresh default),
-  // re-deal the panels round-robin so a newly added photo actually appears.
+  // While the panels are still auto-dealt, re-deal round-robin on every add so a
+  // newly added photo actually appears (a 3rd or 4th photo must reach a panel,
+  // not just the first two). Once the user places photos by hand, leave them be.
   ensurePanels();
-  const shown = new Set(state.panels.map((p) => p.photo));
-  if (shown.size <= 1) state.panels.forEach((panel, i) => { panel.photo = photos.length ? i % photos.length : null; });
+  if (!panelsTouched) state.panels.forEach((panel, i) => { panel.photo = photos.length ? i % photos.length : null; });
   renderPhotoList();
   return photos.length - 1;
 }
@@ -145,7 +148,7 @@ function renderPhotoList() {
       selectedPhoto = i;
       renderPhotoList();
       const panel = state.panels[selectedPanel];
-      if (panel) { pushHistory(); panel.photo = i; redraw(); setStatus(`${p.name} is now in panel ${selectedPanel + 1}.`); }
+      if (panel) { pushHistory(); panelsTouched = true; panel.photo = i; redraw(); setStatus(`${p.name} is now in panel ${selectedPanel + 1}.`); }
     });
     photoList.append(li);
   });
@@ -200,6 +203,7 @@ document.getElementById('samples').addEventListener('click', async (e) => {
     pushHistory();
     photos.length = 0;
     selectedPhoto = 0;
+    panelsTouched = false;
     state.panels.forEach((p) => { p.photo = null; });
     renderPhotoList();
     redraw();
@@ -229,6 +233,7 @@ zoomInput.addEventListener('change', () => pushHistory());
 document.getElementById('shuffleBtn').addEventListener('click', () => {
   if (!photos.length) { setStatus('Add a photo first, then shuffle.'); return; }
   pushHistory();
+  panelsTouched = true;
   const order = photos.map((_, i) => i).sort(() => Math.random() - 0.5);
   state.panels.forEach((panel, i) => { panel.photo = order[i % order.length]; });
   redraw();
@@ -237,6 +242,7 @@ document.getElementById('shuffleBtn').addEventListener('click', () => {
 document.getElementById('swapBtn').addEventListener('click', () => {
   if (!photos.length) { setStatus('Add a photo first.'); return; }
   pushHistory();
+  panelsTouched = true;
   const panel = state.panels[selectedPanel];
   panel.photo = panel.photo == null ? 0 : (panel.photo + 1) % photos.length;
   redraw();
@@ -246,6 +252,7 @@ document.getElementById('undoBtn').addEventListener('click', undo);
 document.getElementById('redoBtn').addEventListener('click', redo);
 document.getElementById('resetBtn').addEventListener('click', () => {
   pushHistory();
+  panelsTouched = false;
   state = freshState(state.layout);
   syncControlsFromState();
   redraw();
@@ -339,8 +346,8 @@ export function exportCover(width, height, filename) {
 }
 
 async function exportOne(size) {
-  await exportCover(size.w, size.h, `neon-coast-${size.name}-${size.w}x${size.h}.png`);
-  setStatus(`Saved neon-coast-${size.name}-${size.w}x${size.h}.png`);
+  await exportCover(size.w, size.h, `leonida-nights-${size.name}-${size.w}x${size.h}.png`);
+  setStatus(`Saved leonida-nights-${size.name}-${size.w}x${size.h}.png`);
 }
 document.getElementById('exportSquare').addEventListener('click', () => exportOne(EXPORT_SIZES[0]));
 document.getElementById('exportPortrait').addEventListener('click', () => exportOne(EXPORT_SIZES[1]));
